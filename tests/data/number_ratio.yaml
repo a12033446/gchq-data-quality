@@ -1,0 +1,49 @@
+- description: Numeric string ratios meet the minimum threshold
+  inputs:
+    df:
+      value:
+        - "1234AA"   # 4 digits / 6 chars = 0.6667
+        - "A1B2C3"   # 3 digits / 6 chars = 0.5
+        - "ABC123"   # 3 digits / 6 chars = 0.5
+        - "000AAA"   # 3 digits / 6 chars = 0.5
+    field: value
+    threshold: 0.5
+    comparison: ">="
+  expected:
+    pass_rate: 1.0
+    records_evaluated: 4
+
+- description: Some values fail the numeric character ratio check
+  inputs:
+    df:
+      value:
+        - "1234AA"   # 4 digits / 6 chars = 0.6667
+        - "A1B2C3"   # 3 digits / 6 chars = 0.5
+        - "ABCDEF"   # 0 digits / 6 chars = 0.0
+        - "A2B3C"    # 2 digits / 5 chars = 0.4
+        - "123456"   # 6 digits / 6 chars = 1.0
+    field: value
+    threshold: 0.5
+    comparison: ">="
+  expected:
+    pass_rate: 0.6
+    records_evaluated: 5
+    records_failed_ids: [2, 3]
+    records_failed_sample: [{"value": "ABCDEF"}, {"value": "A2B3C"}]
+
+- description: Empty strings count as 0.0 ratio and null values are skipped
+  inputs:
+    df:
+      value:
+        - "1234AA"   # 4 digits / 6 chars = 0.6667
+        - "A1B2C3"   # 3 digits / 6 chars = 0.5
+        - ""         # 0 digits / 0 chars -> 0.0 by rule helper
+        - null        # skipped by default null handling
+    field: value
+    threshold: 0.5
+    comparison: ">="
+  expected:
+    pass_rate: 0.6667
+    records_evaluated: 3
+    records_failed_ids: [2]
+    records_failed_sample: [{"value": ""}]

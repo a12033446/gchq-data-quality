@@ -1,0 +1,32 @@
+- description: Punctuation and space ratios meet the minimum threshold
+  inputs:
+    df:
+      value:
+        - "a b!"      # 2 punctuation/space chars / 4 chars = 0.5
+        - "...!!"     # 5 punctuation/space chars / 5 chars = 1.0
+        - "x y z"     # 2 spaces / 5 chars = 0.4
+    field: value
+    threshold: 0.5
+    comparison: ">="
+  expected:
+    pass_rate: 0.6667
+    records_evaluated: 3
+    records_failed_ids: [2]
+    records_failed_sample: [{"value": "x y z"}]
+
+- description: Empty string counts as 0.0 ratio and null values are skipped
+  inputs:
+    df:
+      value:
+        - "a b!"      # 2 punctuation/space chars / 4 chars = 0.5
+        - "..."       # 3 punctuation/space chars / 3 chars = 1.0
+        - ""          # empty string -> 0.0 by helper
+        - null         # skipped by null handling
+    field: value
+    threshold: 0.5
+    comparison: ">="
+  expected:
+    pass_rate: 0.6667
+    records_evaluated: 3
+    records_failed_ids: [2]
+    records_failed_sample: [{"value": ""}]

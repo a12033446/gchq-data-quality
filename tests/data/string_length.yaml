@@ -1,0 +1,119 @@
+- description: All emails meet minimum length of 5 characters with >= comparison
+  inputs:
+    df:
+      email: ["a@b.co", "user@example.com", "test@test.com", "hello@"]
+    field: email
+    threshold: 5
+    comparison: ">="
+  expected:
+    pass_rate: 1.0
+    records_evaluated: 4
+
+- description: Some emails fail minimum length requirement
+  inputs:
+    df:
+      email: ["a@b.co", "user@example.com", "x", "test@test.com", "ab"]
+    field: email
+    threshold: 5
+    comparison: ">="
+  expected:
+    pass_rate: 0.6
+    records_evaluated: 5
+    records_failed_ids: [2, 4]
+    records_failed_sample: [{"email": "x"}, {"email": "ab"}]
+
+- description: All emails exceed maximum length of 10 characters with > comparison
+  inputs:
+    df:
+      email: ["user@example.com", "admin@company.co.uk", "test@production.io"]
+    field: email
+    threshold: 10
+    comparison: ">"
+  expected:
+    pass_rate: 1.0
+    records_evaluated: 3
+
+- description: Some strings are within maximum length with <= comparison
+  inputs:
+    df:
+      code: ["ABC", "ABCD", "ABCDE", "ABCDEF", "ABCDEFGH"]
+    field: code
+    threshold: 5
+    comparison: "<="
+  expected:
+    pass_rate: 0.6
+    records_evaluated: 5
+    records_failed_ids: [3, 4]
+    records_failed_sample: [{"code": "ABCDEF"}, {"code": "ABCDEFGH"}]
+
+- description: All strings are shorter than threshold with < comparison
+  inputs:
+    df:
+      text: ["a", "ab", "abc", "abcd"]
+    field: text
+    threshold: 10
+    comparison: "<"
+  expected:
+    pass_rate: 1.0
+    records_evaluated: 4
+
+- description: Some strings fail shorter than threshold check
+  inputs:
+    df:
+      text: ["a", "ab", "abc", "abcdefghijk"]
+    field: text
+    threshold: 5
+    comparison: "<"
+  expected:
+    pass_rate: 0.75
+    records_evaluated: 4
+    records_failed_ids: [3]
+    records_failed_sample: [{"text": "abcdefghijk"}]
+
+- description: Null values are skipped and not evaluated
+  inputs:
+    df:
+      email: ["a@b.co", "user@example.com", null, "x", null]
+    field: email
+    threshold: 5
+    comparison: ">="
+  expected:
+    pass_rate: 0.6667
+    records_evaluated: 3
+    records_failed_ids: [3]
+    records_failed_sample: [{"email": "x"}]
+
+- description: All values are null, no records evaluated
+  inputs:
+    df:
+      email: [null, null, null]
+    field: email
+    threshold: 5
+    comparison: ">="
+  expected:
+    pass_rate: null
+    records_evaluated: 0
+
+- description: Numeric values are coerced to strings
+  inputs:
+    df:
+      numeric_id: [1, 22, 333, 4444]
+    field: numeric_id
+    threshold: 2
+    comparison: ">="
+  expected:
+    pass_rate: 0.75
+    records_evaluated: 4
+    records_failed_ids: [0]
+    records_failed_sample: [{"numeric_id": "1"}]
+
+- description: Empty comparison at boundary with >= 
+  inputs:
+    df:
+      field: ["", "a", "ab"]
+    field: field
+    threshold: 0
+    comparison: ">="
+  expected:
+    pass_rate: 1.0
+    records_evaluated: 3

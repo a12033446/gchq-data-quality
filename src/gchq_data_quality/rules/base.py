@@ -104,6 +104,10 @@ class BaseRule(DataQualityBaseModel, ABC):
     data_quality_dimension: DataQualityDimension = Field(
         ..., description="The Dama dimension for each rule"
     )
+    metric_name: str | None = Field(
+        default=None,
+        description="Name of the metric being calculated (for metric rules only)",
+    )
 
     @overload
     def evaluate(self, data_source: pd.DataFrame) -> DataQualityResult: ...
@@ -194,6 +198,7 @@ class BaseRule(DataQualityBaseModel, ABC):
         data_quality_result = DataQualityResult(
             field=self.field,
             data_quality_dimension=self.data_quality_dimension,
+            metric=self.metric_name,
             records_evaluated=records_evaluated,
             pass_rate=pass_rate,
             rule_id=self.rule_id,

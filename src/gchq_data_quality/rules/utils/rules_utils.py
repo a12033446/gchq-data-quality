@@ -187,3 +187,32 @@ def extract_columns_from_expression(
                 f"Columns {missing} not found in DataFrame columns: {df_columns}"
             )
     return list(columns)
+
+
+def evaluate_metric_expression(df: pd.DataFrame, expression: str) -> pd.Series:
+    """Evaluate a metric expression on a DataFrame, returning a numeric Series.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame.
+        expression (str): Metric expression to evaluate (e.g. '`a`.str.len()', 'abs(`b` - `c`)').
+
+    Returns:
+        pd.Series: A pandas Series of numeric dtype, reflecting the result.
+
+    Raises:
+        DQFunctionError: If the expression does not evaluate to a numeric Series, or fails to execute.
+    """
+    try:
+        result = df.eval(expression)
+
+        # Ensure result is a pd.Series of numeric dtype
+        if not (
+            isinstance(result, pd.Series) and pd.api.types.is_numeric_dtype(result.dtype)
+        ):
+            raise DQFunctionError(
+                f"Expression '{expression}' does not evaluate to a numeric Series. "
+                f"Examples: `x`.str.len(), abs(`y` - `z`). Returned type is {type(result)}"
+            )
+        return result
+    except Exception as e:
+        raise DQFunctionError(f"Error evaluating expression '{expression}': {e}") from e

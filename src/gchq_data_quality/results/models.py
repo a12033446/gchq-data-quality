@@ -112,6 +112,10 @@ class DataQualityResult(DataQualityBaseModel):
         ...,
         description="Which DAMA quality framework area is evaluated (Uniqueness, Completeness, etc.).",
     )
+    metric: str | None = Field(
+        default=None,
+        description="For Metric dimension rules, the specific metric function name (e.g., 'string_length', 'entropy'). None for other dimensions.",
+    )
     records_evaluated: int | None = Field(
         default=None,
         description="Total number of records evaluated / checked for this rule.",

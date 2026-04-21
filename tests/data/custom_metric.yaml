@@ -1,0 +1,80 @@
+- description: String length using custom metric expression
+  inputs:
+    df:
+      text: ["hello", "world", "test", "hi"]
+    field: text
+    metric_expression: "`text`.str.len()"
+    threshold: 4
+    comparison: ">="
+    metric_name: "text_length"
+  expected:
+    pass_rate: 0.75
+    records_evaluated: 4
+    records_failed_ids: [3]
+    records_failed_sample: [{"text": "hi"}]
+    metric: "text_length"
+
+- description: Digit count in password using regex
+  inputs:
+    df:
+      password: ["pass123", "abc", "123456", "test1"]
+    field: password
+    metric_expression: "`password`.str.count(r'[0-9]')"
+    threshold: 2
+    comparison: ">="
+    metric_name: "digit_count"
+  expected:
+    pass_rate: 0.5
+    records_evaluated: 4
+    records_failed_ids: [1, 3]
+    records_failed_sample: [{"password": "abc"}, {"password": "test1"}]
+    metric: "digit_count"
+
+- description: Word count using regex pattern
+  inputs:
+    df:
+      description: ["hello world test", "single", "two words here", "many words in this sentence"]
+    field: description
+    metric_expression: "`description`.str.count(r'\\b\\w+\\b')"
+    threshold: 3
+    comparison: ">="
+    metric_name: "word_count"
+  expected:
+    pass_rate: 0.75
+    records_evaluated: 4
+    records_failed_ids: [1]
+    records_failed_sample: [{"description": "single"}]
+    metric: "word_count"
+
+- description: Mathematical operation - absolute difference
+  inputs:
+    df:
+      predicted: [10, 15, 8, 12]
+      actual: [12, 14, 10, 8]
+    field: predicted
+    metric_expression: "abs(`predicted` - `actual`)"
+    threshold: 2
+    comparison: "<="
+    metric_name: "prediction_error"
+  expected:
+    pass_rate: 0.75
+    records_evaluated: 4
+    records_failed_ids: [3]
+    records_failed_sample: [{"predicted": 12, "actual": 8}]
+    metric: "prediction_error"
+
+- description: Custom metric with exact equality
+  inputs:
+    df:
+      status: ["active", "inactive", "active", "pending"]
+    field: status
+    metric_expression: "`status`.str.len()"
+    threshold: 6
+    comparison: "=="
+    metric_name: "status_length"
+  expected:
+    pass_rate: 0.5
+    records_evaluated: 4
+    records_failed_ids: [1, 3]
+    records_failed_sample: [{"status": "inactive"}, {"status": "pending"}]
+    metric: "status_length"

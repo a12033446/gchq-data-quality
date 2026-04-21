@@ -36,6 +36,7 @@ class DamaFramework(str, Enum):
         Consistency: Value is "Consistency".
         Accuracy: Value is "Accuracy".
         Timeliness: Value is "Timeliness".
+        Metric: Value is "Metric".
 
     Note:
         It will accept any string case, but coerce to title case.
@@ -53,6 +54,7 @@ class DamaFramework(str, Enum):
     Consistency = "Consistency"
     Accuracy = "Accuracy"
     Timeliness = "Timeliness"
+    Metric = "Metric"
 
     @classmethod
     def _missing_(cls, value: object) -> DamaFramework | None:

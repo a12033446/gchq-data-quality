@@ -55,6 +55,13 @@ from gchq_data_quality.results.models import DataQualityReport, DataQualityResul
 from gchq_data_quality.rules.accuracy import AccuracyRule
 from gchq_data_quality.rules.completeness import CompletenessRule
 from gchq_data_quality.rules.consistency import ConsistencyRule
+from gchq_data_quality.rules.metrics.custom_metric import CustomMetricRule
+from gchq_data_quality.rules.metrics.entropy import EntropyRule
+from gchq_data_quality.rules.metrics.number_ratio import NumberRatioRule
+from gchq_data_quality.rules.metrics.punctuation_space_ratio import (
+    PunctuationSpaceRatioRule,
+)
+from gchq_data_quality.rules.metrics.string_length import StringLengthRule
 from gchq_data_quality.rules.timeliness import (
     TimelinessRelativeRule,
     TimelinessStaticRule,
@@ -74,7 +81,12 @@ RuleType = Annotated[
     | ConsistencyRule
     | AccuracyRule
     | TimelinessRelativeRule
-    | TimelinessStaticRule,
+    | TimelinessStaticRule
+    | StringLengthRule
+    | EntropyRule
+    | PunctuationSpaceRatioRule
+    | NumberRatioRule
+    | CustomMetricRule,
     Field(discriminator="function"),
 ]
 

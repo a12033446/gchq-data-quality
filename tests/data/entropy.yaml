@@ -1,0 +1,121 @@
+- description: All strings have high entropy (diverse characters)
+  inputs:
+    df:
+      text: ["abcde", "hello!", "world?", "test123"]
+    field: text
+    threshold: 2.0
+    comparison: ">="
+  expected:
+    pass_rate: 1.0
+    records_evaluated: 4
+
+- description: Some strings fail minimum entropy requirement
+  inputs:
+    df:
+      text: ["aaaaa", "bbbb", "hello", "xyz"]
+    field: text
+    threshold: 1.5
+    comparison: ">="
+  expected:
+    pass_rate: 0.5
+    records_evaluated: 4
+    records_failed_ids: [0, 1]
+    records_failed_sample: [{"text": "aaaaa"}, {"text": "bbbb"}]
+
+- description: Repeated characters have low entropy
+  inputs:
+    df:
+      text: ["aaa", "bb", "a", ""]
+    field: text
+    threshold: 0.0
+    comparison: ">="
+  expected:
+    pass_rate: 1.0
+    records_evaluated: 4
+
+- description: Mixed case text with varying entropy
+  inputs:
+    df:
+      text: ["AAA", "AaBb", "password123"]
+    field: text
+    threshold: 1.0
+    comparison: ">"
+  expected:
+    pass_rate: 0.6667
+    records_evaluated: 3
+    records_failed_ids: [0]
+    records_failed_sample: [{"text": "AAA"}]
+
+- description: Null values are skipped
+  inputs:
+    df:
+      text: ["abc", "def", null, "ghi"]
+    field: text
+    threshold: 1.5
+    comparison: ">="
+  expected:
+    pass_rate: 1.0
+    records_evaluated: 3
+
+- description: All null values
+  inputs:
+    df:
+      text: [null, null]
+    field: text
+    threshold: 1.0
+    comparison: ">="
+  expected:
+    pass_rate: null
+    records_evaluated: 0
+
+- description: Empty strings have low entropy
+  inputs:
+    df:
+      text: ["", "ab", "abc", "abcd"]
+    field: text
+    threshold: 0.0
+    comparison: ">"
+  expected:
+    pass_rate: 0.75
+    records_evaluated: 4
+    records_failed_ids: [0]
+    records_failed_sample: [{"text": ""}]
+
+- description: Numeric values coerced to strings
+  inputs:
+    df:
+      id: [123, 111, 222, 333]
+    field: id
+    threshold: 1.0
+    comparison: ">="
+  expected:
+    pass_rate: 0.25
+    records_evaluated: 4
+    records_failed_ids: [1, 2, 3]
+    records_failed_sample: [{"id": "111"}, {"id": "222"}, {"id": "333"}]
+
+- description: Strings with special characters
+  inputs:
+    df:
+      password: ["!@#$%", "abcde", "AAaa", "12345"]
+    field: password
+    threshold: 2.0
+    comparison: ">="
+  expected:
+    pass_rate: 0.75
+    records_evaluated: 4
+    records_failed_ids: [2]
+    records_failed_sample: [{"password": "AAaa"}]
+
+- description: Entropy maximum boundary check
+  inputs:
+    df:
+      text: ["ab", "abc", "abcd", "abcde"]
+    field: text
+    threshold: 2.0
+    comparison: "<="
+  expected:
+    pass_rate: 0.75
+    records_evaluated: 4
+    records_failed_ids: [3]
+    records_failed_sample: [{"text": "abcde"}]

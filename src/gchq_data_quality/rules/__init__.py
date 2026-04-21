@@ -56,6 +56,12 @@ from gchq_data_quality.rules.validity import (
     ValidityNumericalRangeRule,
     ValidityRegexRule,
 )  # noqa
+from gchq_data_quality.rules.metrics import (
+    StringLengthRule,
+    EntropyRule,
+    PunctuationSpaceRatioRule,
+    NumberRatioRule,
+)  # noqa
 
 __all__ = [
     "UniquenessRule",
@@ -66,4 +72,8 @@ __all__ = [
     "TimelinessStaticRule",
     "ValidityNumericalRangeRule",
     "ValidityRegexRule",
+    "StringLengthRule",
+    "EntropyRule",
+    "PunctuationSpaceRatioRule",
+    "NumberRatioRule",
 ]
