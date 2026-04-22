@@ -12,7 +12,7 @@ from gchq_data_quality.rules.metrics.metric_rule import MetricRule
 
 class EntropyRule(MetricRule):
     """
-    Rule for evaluating if string entropy meets a specified threshold.
+    Rule for calculating the average Shannon entropy in a field.
 
     Shannon entropy is calculated for each string based on character frequency:
     H = -sum(p_i * log2(p_i)) where p_i is the proportion of each character.
@@ -20,14 +20,12 @@ class EntropyRule(MetricRule):
     High entropy indicates high character diversity (less predictable).
     Low entropy indicates low character diversity (more predictable).
 
-    The rule checks if the entropy of each value in the field passes the comparison
-    check against the specified entropy threshold. Null values are skipped (not evaluated).
+    The rule calculates the entropy for each value in the field and returns
+    the average entropy as the metric value. Null values are skipped (not evaluated).
     Non-string values are coerced to strings before entropy calculation.
 
     Attributes:
         field (str): The column containing strings to check.
-        threshold (float): The entropy threshold to compare against (0.0 to log2(256) ≈ 8.0).
-        comparison (Literal["<=", "<", ">=", ">"]): The comparison operator to use.
         rule_id (str | None): Optional identifier for the rule.
         rule_description (str | None): Optional description of the rule.
         data_quality_dimension (DamaFramework): Associated data quality dimension.
@@ -36,24 +34,14 @@ class EntropyRule(MetricRule):
 
     Example:
         ```python
-        >>> rule = EntropyRule(
-        ...     field="password",
-        ...     threshold=3.0,
-        ...     comparison=">="
-        ... )
+        >>> rule = EntropyRule(field="password")
         >>> result = rule.evaluate(df)
-
-        >>> rule = EntropyRule(
-        ...     field="category",
-        ...     threshold=2.0,
-        ...     comparison="<"
-        ... )
-        >>> result = rule.evaluate(df)
+        >>> print(result.metric_value)  # Average entropy
         ```
 
     Returns:
-        DataQualityResult: Contains the pass rate, number of records evaluated,
-        and sample of failed records where string entropy did not meet the threshold.
+        DataQualityResult: Contains the average entropy as metric_value,
+        number of records evaluated, and no pass rate or failed records.
 
     Note:
         Empty strings have entropy of 0. Single character strings have entropy of 0.

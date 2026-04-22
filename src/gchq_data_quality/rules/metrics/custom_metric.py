@@ -17,14 +17,11 @@ class CustomMetricRule(MetricRule):
     Flexible metric rule using pandas eval expressions.
 
     Allows any pandas Series operation that returns numeric values to be used as a metric.
-    The metric expression is evaluated using pandas eval() and compared against a threshold
-    using the specified comparison operator.
+    The metric expression is evaluated using pandas eval() and the average value is returned.
 
     Attributes:
         field (str): The column to measure.
         metric_expression (str): Pandas eval expression returning numeric metric values (use backticks for column names).
-        comparison (Literal["==", "!=", "<=", "<", ">=", ">"]): The comparison operator to use.
-        threshold (int | float): The threshold value to compare the metric against.
         metric_name (str | None): Name of the metric being calculated (defaults to None).
         rule_id (str | None): Optional identifier for the rule.
         rule_description (str | None): Optional description of the rule.
@@ -38,18 +35,15 @@ class CustomMetricRule(MetricRule):
         >>> rule = CustomMetricRule(
         ...     field="email",
         ...     metric_expression="`email`.str.len()",
-        ...     comparison=">=",
-        ...     threshold=5,
         ...     metric_name="email_length"
         ... )
         >>> result = rule.evaluate(df)
+        >>> print(result.metric_value)  # Average email length
 
         # Digit count in password
         >>> rule = CustomMetricRule(
         ...     field="password",
         ...     metric_expression="`password`.str.count(r'[0-9]')",
-        ...     comparison=">=",
-        ...     threshold=2,
         ...     metric_name="password_digit_count"
         ... )
         >>> result = rule.evaluate(df)
@@ -58,8 +52,6 @@ class CustomMetricRule(MetricRule):
         >>> rule = CustomMetricRule(
         ...     field="description",
         ...     metric_expression="`description`.str.count(r'\\b\\w+\\b')",
-        ...     comparison=">=",
-        ...     threshold=10,
         ...     metric_name="word_count"
         ... )
         >>> result = rule.evaluate(df)
@@ -68,16 +60,14 @@ class CustomMetricRule(MetricRule):
         >>> rule = CustomMetricRule(
         ...     field="score",
         ...     metric_expression="abs(`predicted` - `actual`)",
-        ...     comparison="<=",
-        ...     threshold=5.0,
         ...     metric_name="prediction_error"
         ... )
         >>> result = rule.evaluate(df)
         ```
 
     Returns:
-        DataQualityResult: Contains the pass rate, number of records evaluated,
-        and sample of failed records where the custom metric did not meet the threshold.
+        DataQualityResult: Contains the average metric value,
+        number of records evaluated, and no pass rate or failed records.
     """
 
     function: Literal["custom_metric"] = "custom_metric"

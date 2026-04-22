@@ -12,16 +12,14 @@ from gchq_data_quality.rules.metrics.metric_rule import MetricRule
 
 class StringLengthRule(MetricRule):
     """
-    Rule for evaluating if string length in a field meets a specified threshold.
+    Rule for calculating the average string length in a field.
 
-    The rule checks if the string length of each value in the field passes the comparison
-    check against the specified length threshold. Null values are skipped (not evaluated).
-    Non-string values are coerced to strings before length checking.
+    The rule calculates the string length for each value in the field and returns
+    the average length as the metric value. Null values are skipped (not evaluated).
+    Non-string values are coerced to strings before length calculation.
 
     Attributes:
         field (str): The column containing strings to check.
-        threshold (int): The length threshold to compare against (must be non-negative).
-        comparison (Literal["<=", "<", ">=", ">"]): The comparison operator to use.
         rule_id (str | None): Optional identifier for the rule.
         rule_description (str | None): Optional description of the rule.
         data_quality_dimension (DamaFramework): Associated data quality dimension.
@@ -30,35 +28,17 @@ class StringLengthRule(MetricRule):
 
     Example:
         ```python
-        >>> rule = StringLengthRule(
-        ...     field="email",
-        ...     threshold=5,
-        ...     comparison=">="
-        ... )
+        >>> rule = StringLengthRule(field="email")
         >>> result = rule.evaluate(df)
-
-        >>> rule = StringLengthRule(
-        ...     field="postal_code",
-        ...     threshold=10,
-        ...     comparison="<="
-        ... )
-        >>> result = rule.evaluate(df)
+        >>> print(result.metric_value)  # Average string length
         ```
 
     Returns:
-        DataQualityResult: Contains the pass rate, number of records evaluated,
-        and sample of failed records where string length did not meet the threshold.
+        DataQualityResult: Contains the average string length as metric_value,
+        number of records evaluated, and no pass rate or failed records.
     """
 
     function: Literal["string_length"] = "string_length"
-
-    @field_validator("threshold")
-    @classmethod
-    def validate_threshold_non_negative(cls, v: int | float) -> int | float:
-        """Ensure threshold is a non-negative number."""
-        if v < 0:
-            raise ValueError("threshold must be a non-negative number")
-        return v
 
     def _get_metric_values_pandas(self, df: pd.DataFrame) -> pd.Series:
         """Calculate string length for each value in the field.

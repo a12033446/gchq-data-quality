@@ -1,26 +1,15 @@
-# (c) Crown Copyright GCHQ
-
 """Abstract base class for metric-based data quality rules."""
 
 from abc import abstractmethod
-from operator import eq, ge, gt, le, lt, ne
 from typing import Literal, Self
 
 import pandas as pd
 from pydantic import Field, model_validator
 
 from gchq_data_quality.models import DamaFramework, DataQualityDimension
+from gchq_data_quality.results.models import DataQualityResult
 from gchq_data_quality.rules.base import BaseRule
-
-# Mapping of comparison operators to their functions
-_COMPARISON_OPS = {
-    "==": eq,
-    "!=": ne,
-    "<=": le,
-    "<": lt,
-    ">=": ge,
-    ">": gt,
-}
+from gchq_data_quality.rules.utils.rules_utils import ensure_columns_exist_pandas
 
 
 class MetricRule(BaseRule):
@@ -28,15 +17,13 @@ class MetricRule(BaseRule):
     Abstract base class for metric-based data quality rules.
 
     MetricRule provides a common framework for rules that measure a numeric metric
-    on field values and compare against a threshold using a comparison operator.
+    on field values and return an aggregated metric value.
 
     Subclasses implement the specific metric calculation by overriding
-    `_get_metric_values_pandas()`. The comparison logic is handled automatically.
+    `_get_metric_values_pandas()`.
 
     Attributes:
         field (str): The column to measure.
-        comparison (Literal["<=", "<", ">=", ">"]): The comparison operator to use. Defaults to >=
-        threshold (int | float): The threshold value to compare the metric against.
         rule_id (str | None): Optional identifier for the rule.
         rule_description (str | None): Optional description of the rule.
         data_quality_dimension (DataQualityDimension): Associated data quality dimension.
@@ -44,12 +31,6 @@ class MetricRule(BaseRule):
         na_values (str | list[Any] | None): Additional values considered as missing.
     """
 
-    comparison: Literal["==", "!=", "<=", "<", ">=", ">"] = Field(
-        default=">=", description="The comparison operator to use"
-    )
-    threshold: int | float = Field(
-        ..., description="The threshold value to compare the metric against"
-    )
     data_quality_dimension: DataQualityDimension = Field(default=DamaFramework.Metric)
 
     @model_validator(mode="after")
@@ -77,6 +58,37 @@ class MetricRule(BaseRule):
         df[self.field] = df[self.field].astype("string")
         return df
 
+    def _evaluate_in_pandas(self, df: pd.DataFrame) -> DataQualityResult:
+        """Evaluate metric rules by returning the aggregated metric value.
+
+        Metric rules no longer perform a threshold comparison or return a pass_rate.
+        Instead, they calculate the metric values per record and expose the
+        aggregated metric value on the resulting DataQualityResult.
+        """
+        columns_used = self._get_columns_used_pandas()
+        ensure_columns_exist_pandas(df, columns_used)
+        df = self._copy_and_subset_dataframe(df, columns_used)
+        df = self._handle_dataframe_coercion(df)
+        df = self._handle_na_values_pandas(df, columns_used, self.na_values)
+
+        metric_values = self._get_metric_values_pandas(df)
+        records_evaluated = int(metric_values.notna().sum())
+        metric_value = metric_values.mean()
+        if pd.isna(metric_value):
+            metric_value = None
+
+        return DataQualityResult(
+            field=self.field,
+            data_quality_dimension=self.data_quality_dimension,
+            metric=self.metric_name,
+            metric_value=metric_value,
+            records_evaluated=records_evaluated,
+            pass_rate=None,
+            rule_id=self.rule_id,
+            rule_description=self.rule_description,
+            rule_data=self.to_json(),
+        )
+
     @abstractmethod
     def _get_metric_values_pandas(self, df: pd.DataFrame) -> pd.Series:
         """Calculate metric values for each record in the field.
@@ -94,15 +106,10 @@ class MetricRule(BaseRule):
         pass  # pragma: no cover
 
     def _get_records_passing_mask_pandas(self, df: pd.DataFrame) -> pd.Series:
-        """Check if metric values pass the comparison threshold.
+        """Unused for metric rules.
 
-        Args:
-            df (pd.DataFrame): The DataFrame to evaluate.
-
-        Returns:
-            pd.Series: Boolean mask where True indicates the metric
-            passes the comparison check.
+        MetricRule returns an aggregated metric value instead of a per-record pass/fail mask.
+        This default implementation returns all True so the base evaluation path remains valid
+        if it is ever called indirectly.
         """
-        comparison_op = _COMPARISON_OPS[self.comparison]
-        metric_values = self._get_metric_values_pandas(df)
-        return comparison_op(metric_values, self.threshold)
+        return pd.Series(True, index=df.index)

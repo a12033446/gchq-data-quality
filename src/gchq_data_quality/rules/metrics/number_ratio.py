@@ -12,19 +12,17 @@ from gchq_data_quality.rules.metrics.utils import _apply_string_ratio_metric
 
 class NumberRatioRule(MetricRule):
     """
-    Rule for evaluating if the ratio of numeric characters meets a specified threshold.
+    Rule for calculating the average ratio of numeric characters in a field.
 
     This metric measures the proportion of numeric digits (0-9) relative to the
     total string length. It helps identify anomalous data for example if a text field is
     suddenly a uuid or starts to have numbers.
 
-    The rule checks if the ratio of each value in the field passes the comparison
-    check against the specified threshold. Null values are skipped (not evaluated).
+    The rule calculates the ratio for each value in the field and returns
+    the average ratio as the metric value. Null values are skipped (not evaluated).
 
     Attributes:
         field (str): The column containing strings to check.
-        threshold (float): The ratio threshold to compare against (0.0 to 1.0).
-        comparison (Literal["<=", "<", ">=", ">"]): The comparison operator to use.
         rule_id (str | None): Optional identifier for the rule.
         rule_description (str | None): Optional description of the rule.
         data_quality_dimension (DamaFramework): Associated data quality dimension.
@@ -33,26 +31,14 @@ class NumberRatioRule(MetricRule):
 
     Example:
         ```python
-        >>> # Flag records with more than 50% numbers (unusual for names)
-        >>> rule = NumberRatioRule(
-        ...     field="name",
-        ...     threshold=0.5,
-        ...     comparison=">"
-        ... )
+        >>> rule = NumberRatioRule(field="name")
         >>> result = rule.evaluate(df)
-
-        >>> # Ensure product codes have at least 30% numbers
-        >>> rule = NumberRatioRule(
-        ...     field="product_code",
-        ...     threshold=0.3,
-        ...     comparison=">="
-        ... )
-        >>> result = rule.evaluate(df)
+        >>> print(result.metric_value)  # Average number ratio
         ```
 
     Returns:
-        DataQualityResult: Contains the pass rate, number of records evaluated,
-        and sample of failed records where number ratio did not meet the threshold.
+        DataQualityResult: Contains the average ratio as metric_value,
+        number of records evaluated, and no pass rate or failed records.
     """
 
     function: Literal["number_ratio"] = "number_ratio"

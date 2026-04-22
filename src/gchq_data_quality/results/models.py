@@ -116,6 +116,10 @@ class DataQualityResult(DataQualityBaseModel):
         default=None,
         description="For Metric dimension rules, the specific metric function name (e.g., 'string_length', 'entropy'). None for other dimensions.",
     )
+    metric_value: float | int | None = Field(
+        default=None,
+        description="For Metric dimension rules, the aggregated metric value computed across evaluated records.",
+    )
     records_evaluated: int | None = Field(
         default=None,
         description="Total number of records evaluated / checked for this rule.",
@@ -208,9 +212,9 @@ class DataQualityResult(DataQualityBaseModel):
                 )
                 return None
 
-    @field_validator("pass_rate", mode="before")
+    @field_validator("pass_rate", "metric_value", mode="before")
     @classmethod
-    def _set_to_none_if_nan(cls, v: float | None) -> float | None:
+    def _set_to_none_if_nan(cls, v: float | int | None) -> float | int | None:
         """Needed as Spark coerces to NaN"""
         if pd.isna(v):
             return None
@@ -332,12 +336,26 @@ class DataQualityReport(DataQualityBaseModel):
         """
 
         df = self.to_dataframe()
+        if "metric_value" in df.columns:
+            df["metric_value_total"] = df["metric_value"] * df["records_evaluated"]
         df = add_records_passing(df)
         groupby_columns = self._get_groupby_columns()
         aggregation_dict = self._get_aggregation_dict()
 
+        if "metric_value_total" in df.columns:
+            aggregation_dict["metric_value_total"] = "sum"
+
         grouped_df = df.groupby(groupby_columns, dropna=False).agg(aggregation_dict)
         grouped_df = self._recalculate_pass_rate(grouped_df)
+
+        if "metric_value_total" in grouped_df.columns:
+            grouped_df["metric_value"] = grouped_df.apply(
+                lambda row: None
+                if row["records_evaluated"] == 0
+                else row["metric_value_total"] / row["records_evaluated"],
+                axis=1,
+            )
+            grouped_df.drop(columns=["metric_value_total"], inplace=True)
 
         grouped_df = self._sort_df_columns(grouped_df)
         grouped_df.replace(
@@ -355,13 +373,19 @@ class DataQualityReport(DataQualityBaseModel):
         return df[ordered_columns].reset_index()
 
     def _recalculate_pass_rate(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Recalculates the pass rate following aggregation of each parition during spark execution"""
-        df["pass_rate"] = df.agg(
-            lambda row: calculate_pass_rate(
-                row["records_passing"], row["records_evaluated"]
-            ),
-            axis=1,
-        )
+        """Recalculates the pass rate following aggregation of each partition during spark execution"""
+        if "metric_value_total" in df.columns:
+            df["pass_rate"] = df.apply(
+                lambda row: None,
+                axis=1,
+            )
+        else:
+            df["pass_rate"] = df.agg(
+                lambda row: calculate_pass_rate(
+                    row["records_passing"], row["records_evaluated"]
+                ),
+                axis=1,
+            )
         df.drop(["records_passing"], axis=1, inplace=True)
         return df
 

@@ -31,7 +31,12 @@ def add_records_passing(df: pd.DataFrame) -> pd.DataFrame:
 
     """
 
-    df["records_passing"] = df["records_evaluated"] * df["pass_rate"]
+    def _compute_records_passing(row: pd.Series) -> float | None:
+        if pd.isna(row["pass_rate"]):
+            return None
+        return row["records_evaluated"] * row["pass_rate"]
+
+    df["records_passing"] = df.apply(_compute_records_passing, axis=1)
     return df
 
 

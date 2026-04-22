@@ -13,7 +13,7 @@ from gchq_data_quality.rules.metrics.utils import _apply_string_ratio_metric
 
 class PunctuationSpaceRatioRule(MetricRule):
     """
-    Rule for evaluating if the ratio of punctuation and space characters meets a threshold.
+    Rule for calculating the average ratio of punctuation and space characters in a field.
 
     This metric helps identify anomalous or corrupted data by measuring the proportion
     of punctuation and space characters relative to the total string length.
@@ -26,13 +26,11 @@ class PunctuationSpaceRatioRule(MetricRule):
     - Incorrectly formatted fields
     - Encoding issues
 
-    The rule checks if the ratio of each value in the field passes the comparison
-    check against the specified threshold. Null values are skipped (not evaluated).
+    The rule calculates the ratio for each value in the field and returns
+    the average ratio as the metric value. Null values are skipped (not evaluated).
 
     Attributes:
         field (str): The column containing strings to check.
-        threshold (float): The ratio threshold to compare against (0.0 to 1.0).
-        comparison (Literal["<=", "<", ">=", ">"]): The comparison operator to use.
         rule_id (str | None): Optional identifier for the rule.
         rule_description (str | None): Optional description of the rule.
         data_quality_dimension (DamaFramework): Associated data quality dimension.
@@ -41,26 +39,14 @@ class PunctuationSpaceRatioRule(MetricRule):
 
     Example:
         ```python
-        >>> # Flag records with more than 20% punctuation/space
-        >>> rule = PunctuationSpaceRatioRule(
-        ...     field="name",
-        ...     threshold=0.2,
-        ...     comparison=">"
-        ... )
+        >>> rule = PunctuationSpaceRatioRule(field="name")
         >>> result = rule.evaluate(df)
-
-        >>> # Ensure records have less than 5% punctuation/space
-        >>> rule = PunctuationSpaceRatioRule(
-        ...     field="description",
-        ...     threshold=0.05,
-        ...     comparison="<="
-        ... )
-        >>> result = rule.evaluate(df)
+        >>> print(result.metric_value)  # Average punctuation/space ratio
         ```
 
     Returns:
-        DataQualityResult: Contains the pass rate, number of records evaluated,
-        and sample of failed records where punctuation/space ratio did not meet the threshold.
+        DataQualityResult: Contains the average ratio as metric_value,
+        number of records evaluated, and no pass rate or failed records.
     """
 
     function: Literal["punctuation_space_ratio"] = "punctuation_space_ratio"
