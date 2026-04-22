@@ -1,0 +1,149 @@
+- description: Perfect balance with two equal values
+  inputs:
+    df:
+      category: ["A", "A", "B", "B"]
+    field: category
+  expected:
+    metric_value: 0.0
+    records_evaluated: 4
+    pass_rate: null
+
+- description: Imbalanced distribution with two values (3 to 1 ratio)
+  inputs:
+    df:
+      category: ["A", "A", "A", "B"]
+    field: category
+  expected:
+    metric_value: 0.25
+    records_evaluated: 4
+    pass_rate: null
+
+- description: Highly imbalanced distribution (one value dominates)
+  inputs:
+    df:
+      category: ["A", "B", "B", "B", "B"]
+    field: category
+  expected:
+    metric_value: 0.3
+    records_evaluated: 5
+    pass_rate: null
+
+- description: Single unique value (perfect concentration)
+  inputs:
+    df:
+      category: ["A", "A", "A", "A"]
+    field: category
+  expected:
+    metric_value: 0.0
+    records_evaluated: 4
+    pass_rate: null
+
+- description: Perfect balance with four equal values
+  inputs:
+    df:
+      category: ["A", "B", "C", "D"]
+    field: category
+  expected:
+    metric_value: 0.0
+    records_evaluated: 4
+    pass_rate: null
+
+- description: Imbalanced distribution with three values
+  inputs:
+    df:
+      category: ["A", "A", "A", "A", "B", "B", "C"]
+    field: category
+  expected:
+    metric_value: 0.23809523809523808
+    records_evaluated: 7
+    pass_rate: null
+
+- description: Null values are excluded from distribution calculation but count as evaluated
+  inputs:
+    df:
+      category: ["A", "A", "B", "B", null, null]
+    field: category
+  expected:
+    metric_value: 0.0
+    records_evaluated: 4
+    pass_rate: null
+
+- description: Mix of null and imbalanced non-null values
+  inputs:
+    df:
+      category: ["A", "A", "A", "B", null]
+    field: category
+  expected:
+    metric_value: 0.25
+    records_evaluated: 4
+    pass_rate: null
+
+- description: All values are null
+  inputs:
+    df:
+      category: [null, null, null]
+    field: category
+  expected:
+    metric_value: null
+    records_evaluated: 0
+    pass_rate: null
+
+- description: Moderate imbalance with five values
+  inputs:
+    df:
+      category: ["A", "A", "A", "B", "B", "C", "D", "E"]
+    field: category
+  expected:
+    metric_value: 0.225
+    records_evaluated: 8
+    pass_rate: null
+
+- description: Numeric values in distribution
+  inputs:
+    df:
+      priority: [1, 1, 2, 2, 3]
+    field: priority
+  expected:
+    metric_value: 0.13333333333333333
+    records_evaluated: 5
+    pass_rate: null
+
+- description: Empty string as a category value
+  inputs:
+    df:
+      category: ["A", "A", "", ""]
+    field: category
+  expected:
+    metric_value: 0.0
+    records_evaluated: 4
+    pass_rate: null
+
+- description: Mixed null and empty string values
+  inputs:
+    df:
+      category: ["A", "A", "", "B", "B", null]
+    field: category
+  expected:
+    metric_value: 0.13333333333333333
+    records_evaluated: 5
+    pass_rate: null
+
+- description: Single value repeated (no distribution variance)
+  inputs:
+    df:
+      category: ["X", "X", "X", "X", "X"]
+    field: category
+  expected:
+    metric_value: 0.0
+    records_evaluated: 5
+    pass_rate: null
+
+- description: Two values with extreme imbalance (99 to 1)
+  inputs:
+    df:
+      category: ["A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "B"]
+    field: category
+  expected:
+    metric_value: 0.45238095238095234
+    records_evaluated: 21
+    pass_rate: null

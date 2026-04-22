@@ -3,6 +3,9 @@
 """Metrics-based data quality rules."""
 
 from gchq_data_quality.rules.metrics.custom_metric import CustomMetricRule
+from gchq_data_quality.rules.metrics.distribution_balance import (
+    DistributionBalanceRule,
+)
 from gchq_data_quality.rules.metrics.entropy import EntropyRule
 from gchq_data_quality.rules.metrics.metric_rule import MetricRule
 from gchq_data_quality.rules.metrics.number_ratio import NumberRatioRule
@@ -18,4 +21,5 @@ __all__ = [
     "PunctuationSpaceRatioRule",
     "NumberRatioRule",
     "CustomMetricRule",
+    "DistributionBalanceRule",
 ]
